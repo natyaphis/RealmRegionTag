@@ -9,6 +9,10 @@ World of Warcraft Retail addon for the US region that adds a realm region tag to
 - Adds a tooltip with the detected region, realm, and leader name.
 - Defaults unknown realms to `US`.
 
+## Screenshot
+
+![RealmRegionTag screenshot](Screenshot.png)
+
 ## Install
 
 Copy this folder into:
