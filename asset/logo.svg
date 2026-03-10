@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">RealmRegionTag Logo</title>
+  <desc id="desc">A square logo made only from US, OC, BR, and LA color blocks.</desc>
+
+  <rect width="512" height="512" rx="72" fill="#0F1724"/>
+
+  <g transform="translate(24 24)">
+    <rect width="224" height="224" rx="52" fill="#4DA3FF"/>
+    <text x="112" y="140" text-anchor="middle" font-family="Verdana, Geneva, sans-serif" font-size="90" font-weight="700" fill="#FFFFFF">US</text>
+  </g>
+
+  <g transform="translate(264 24)">
+    <rect width="224" height="224" rx="52" fill="#36D06F"/>
+    <text x="112" y="140" text-anchor="middle" font-family="Verdana, Geneva, sans-serif" font-size="90" font-weight="700" fill="#0F2416">OC</text>
+  </g>
+
+  <g transform="translate(24 264)">
+    <rect width="224" height="224" rx="52" fill="#FF9B42"/>
+    <text x="112" y="140" text-anchor="middle" font-family="Verdana, Geneva, sans-serif" font-size="90" font-weight="700" fill="#402100">BR</text>
+  </g>
+
+  <g transform="translate(264 264)">
+    <rect width="224" height="224" rx="52" fill="#FF6FAE"/>
+    <text x="112" y="140" text-anchor="middle" font-family="Verdana, Geneva, sans-serif" font-size="90" font-weight="700" fill="#4A112B">LA</text>
+  </g>
+</svg>

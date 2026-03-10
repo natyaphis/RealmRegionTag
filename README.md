@@ -11,7 +11,7 @@ World of Warcraft Retail addon for the US region that adds a realm region tag to
 
 ## Screenshot
 
-![RealmRegionTag screenshot](Screenshot.png)
+![RealmRegionTag screenshot](asset/Screenshot.png)
 
 ## Install
 
