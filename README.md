@@ -1,4 +1,4 @@
-# RegionTag
+# RealmRegionTag
 
 World of Warcraft Retail addon for the US region that adds a realm region tag to entries in the Premade Groups list.
 

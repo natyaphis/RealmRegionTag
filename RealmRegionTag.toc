@@ -1,7 +1,7 @@
 ## Interface: 120001
-## Title: RegionTag
-## Notes: Show realm region tags in Premade Groups list
+## Title: RealmRegionTag
+## Notes: Show realm region tags in the Premade Groups list with RealmRegionTag
 ## Author: Nathan
 ## Version: 1.0.0
 
-RegionTag.lua
+RealmRegionTag.lua
