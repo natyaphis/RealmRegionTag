@@ -1,0 +1,48 @@
+name: Package Addon
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Prepare package folder (exclude dev files)
+        run: |
+          set -euo pipefail
+          rm -rf package
+          mkdir -p package/RealmRegionTag
+
+          rsync -av --delete \
+            --exclude ".git/" \
+            --exclude ".github/" \
+            --exclude "scripts/" \
+            --exclude "AGENTS.md" \
+            --exclude ".vscode/" \
+            --exclude ".gitignore" \
+            --exclude ".gitattributes" \
+            --exclude "package/" \
+            ./ package/RealmRegionTag/
+
+          echo "Package content:"
+          find package/RealmRegionTag -maxdepth 2 -print
+
+      - name: Create zip
+        run: |
+          set -euo pipefail
+          cd package
+          ZIP_NAME="../RealmRegionTag-${{ github.event.release.tag_name }}.zip"
+          zip -r "$ZIP_NAME" RealmRegionTag
+
+      - name: Upload zip to release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: RealmRegionTag-${{ github.event.release.tag_name }}.zip
