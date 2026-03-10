@@ -20,3 +20,7 @@ Copy this folder into:
 `World of Warcraft/_retail_/Interface/AddOns/RealmRegionTag`
 
 Then reload the UI or restart the game.
+
+## License
+
+MIT. See [LICENSE](LICENSE).
