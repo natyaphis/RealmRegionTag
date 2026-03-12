@@ -58,6 +58,11 @@ local function ExtractRealmFromLeaderName(leaderName)
     return realmName
 end
 
+local function GetRegionForRealm(realmName)
+    local normalizedRealm = NormalizeRealmName(realmName)
+    return normalizedRealm and REALM_TO_REGION[normalizedRealm] or "US"
+end
+
 local function GetEntryInfo(resultID)
     if not resultID then
         return nil
@@ -69,8 +74,11 @@ local function GetEntryInfo(resultID)
     end
 
     local realmName = ExtractRealmFromLeaderName(resultInfo.leaderName)
-    local normalizedRealm = NormalizeRealmName(realmName)
-    local region = normalizedRealm and REALM_TO_REGION[normalizedRealm] or "US"
+    if not realmName or realmName == "" then
+        realmName = GetRealmName()
+    end
+
+    local region = GetRegionForRealm(realmName)
 
     return {
         leaderName = resultInfo.leaderName,
