@@ -23,4 +23,4 @@ Then reload the UI or restart the game.
 
 ## License
 
-MIT. See [LICENSE](LICENSE).
+All Rights Reserved. See [LICENSE](LICENSE).
