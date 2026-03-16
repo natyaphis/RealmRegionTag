@@ -4,9 +4,9 @@ World of Warcraft Retail addon for the US region that adds a realm region tag to
 
 ## Features
 
-- Shows `US`, `OC`, `BR`, or `LA` next to each group title.
+- Splits US realms into `ET`, `CT`, `MT`, and `PT` based on realm timezone data.
+- Keeps `OC`, `BR`, and `LA` tags for Oceanic, Brazil, and Latin America realms.
 - Colors each tag for easier scanning.
-- Adds a tooltip with the detected region, realm, and leader name.
 - Defaults unknown realms to `US`.
 
 ## Screenshot

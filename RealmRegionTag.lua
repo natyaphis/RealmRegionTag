@@ -4,12 +4,29 @@ local addon = CreateFrame("Frame")
 
 local REGION_COLORS = {
     US = "4DA3FF",
+    USE = "5AA9FF",
+    USC = "46C3FF",
+    USM = "7A8CFF",
+    USP = "8E7CFF",
     OC = "36D06F",
     BR = "FF9B42",
     LA = "FF6FAE",
 }
 
-local REALM_TO_REGION = {
+local REGION_LABELS = {
+    US = "US",
+    USE = "USE",
+    USC = "USC",
+    USM = "USM",
+    USP = "USP",
+    OC = "OC",
+    BR = "BR",
+    LA = "LA",
+}
+
+local REALM_TO_REGION = {}
+
+local FIXED_REGION_REALMS = {
     -- Oceanic
     amanthul = "OC",
     barthilas = "OC",
@@ -36,6 +53,25 @@ local REALM_TO_REGION = {
     quelthalas = "LA",
     ragnaros = "LA",
 }
+
+local US_REALMS_BY_TIMEZONE = {
+    USE = "altarofstorms,alteracmountains,anetheron,area52,argentdawn,arthas,arygos,balnazzar,blackdragonflight,bleedinghollow,bloodfurnace,bloodhoof,burningblade,dalaran,draktharon,durotan,duskwood,earthenring,eldrethalas,elune,eonar,exodar,firetree,garrosh,gilneas,gorgonnash,grizzlyhills,guldan,kargath,korialstrasz,lightningsblade,llane,lothar,magtheridon,malfurion,malorne,mannoroth,medivh,nazjatar,norgannon,onyxia,rivendare,skullcrusher,spirestone,stormrage,stormscale,theforgottencoast,thescryers,thrall,trollbane,turalyon,velen,warsong,ysera,ysondre,zuljin",
+    USC = "aegwynn,agamaggan,aggramar,alexstrasza,alleria,anubarak,anvilmar,archimonde,auchindoun,azgalor,azshara,azuremyst,blackhand,blackwinglair,bladefist,bladesedge,bonechewer,burninglegion,chogall,chromaggus,crushridge,daggerspine,dawnbringer,dentarg,destromath,dethecus,detheroc,eitrigg,emeralddream,eredar,fizzcrank,frostmane,galakrond,garithos,garona,ghostlands,gorefiend,greymane,gurubashi,hakkar,haomarush,hellscream,icecrown,illidan,jaedenar,kaelthas,khadgar,kirintor,korgath,kultiras,laughingskull,lethon,lightninghoof,madoran,maelstrom,malganis,malygos,misha,moonguard,muradin,nathrezim,nazgrel,nerzhul,nesingwary,nordrassil,queldorei,ravencrest,ravenholdt,rexxar,runetotem,sargeras,senjin,sentinels,shadowmoon,shuhalo,smolderthorn,spinebreaker,staghelm,steamwheedlecartel,stormreaver,tanaris,terokkar,theunderbog,theventureco,thunderhorn,thunderlord,tortheldrin,twistingnether,uldaman,undermine,uther,veknilash,whisperwind,wildhammer,zangarmarsh",
+    USM = "azjolnerub,blackwaterraiders,bloodscalp,boulderfist,cairne,darkspear,dunemaul,hydraxis,kelthuzad,khazmodan,maiev,perenolde,shadowcouncil,stonemaul,terenas",
+    USP = "aeriepeak,akama,andorhal,antonidas,arathor,baelgun,blackrock,boreantundra,bronzebeard,cenarioncircle,cenarius,coilfang,dalvengyr,darkiron,darrowmere,deathwing,demonsoul,doomhammer,draenor,dragonblight,dragonmaw,draka,drakthul,drenden,echoisles,executus,farstriders,feathermoon,fenris,frostwolf,gnomeregan,hyjal,kalecgos,kiljaeden,kilrogg,lightbringer,moknathal,moonrunner,mugthol,proudmoore,scarletcrusade,scilla,shadowsong,shandris,shatteredhalls,shatteredhand,silverhand,silvermoon,sistersofelune,skywall,suramar,thoriumbrotherhood,tichondrius,uldum,ursin,vashj,windrunner,winterhoof,wyrmrestaccord,zuluhed",
+}
+
+local function InitializeRealmMappings()
+    for realmName, region in pairs(FIXED_REGION_REALMS) do
+        REALM_TO_REGION[realmName] = region
+    end
+
+    for region, realmList in pairs(US_REALMS_BY_TIMEZONE) do
+        for realmName in realmList:gmatch("[^,]+") do
+            REALM_TO_REGION[realmName] = region
+        end
+    end
+end
 
 local function NormalizeRealmName(realmName)
     if type(realmName) ~= "string" or realmName == "" then
@@ -89,7 +125,8 @@ end
 
 local function BuildColoredTag(region)
     local color = REGION_COLORS[region] or "FFFFFF"
-    return string.format("|cff%s[%s]|r", color, region)
+    local label = REGION_LABELS[region] or region
+    return string.format("|cff%s[%s]|r", color, label)
 end
 
 local function StripExistingTag(text)
@@ -97,8 +134,8 @@ local function StripExistingTag(text)
         return text
     end
 
-    text = text:gsub("^|cff%x%x%x%x%x%x%[[A-Z][A-Z]?%]|r%s*", "")
-    text = text:gsub("^%[[A-Z][A-Z]?%]%s*", "")
+    text = text:gsub("^|cff%x%x%x%x%x%x%[[A-Z][A-Z][A-Z]?%]|r%s*", "")
+    text = text:gsub("^%[[A-Z][A-Z][A-Z]?%]%s*", "")
     return text
 end
 
@@ -146,3 +183,5 @@ addon:SetScript("OnEvent", function(_, event, loadedAddon)
 end)
 
 addon:RegisterEvent("PLAYER_LOGIN")
+
+InitializeRealmMappings()
