@@ -2,6 +2,7 @@
 ## Title: RealmRegionTag
 ## Notes: Show realm region tags in the Premade Groups list with RealmRegionTag
 ## Author: Nathan
-## Version: 1.0.5
+## Version: 1.0.6
+## IconTexture: Interface\AddOns\RealmRegionTag\Media\logo.png
 
 RealmRegionTag.lua
