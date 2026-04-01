@@ -2,11 +2,13 @@
 
 All notable changes to this project are documented in this file.
 
+## Unreleased
+
+- Updated addon version metadata.
+
 ## 1.0.5
 
 - Released 1.0.5
-
-## Unreleased
 
 ## 1.0.5 - 2026-03-16
 
