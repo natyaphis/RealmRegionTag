@@ -2,6 +2,6 @@
 ## Title: RealmRegionTag
 ## Notes: Show realm region tags in the Premade Groups list with RealmRegionTag
 ## Author: Nathan
-## Version: 1.1.1
+## Version: 1.1.3
 
 RealmRegionTag.lua

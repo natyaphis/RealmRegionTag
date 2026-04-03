@@ -2,6 +2,10 @@
 
 All notable changes to this project are documented in this file.
 
+## 1.1.3
+
+- Maintenance update.
+
 ## 1.1.1
 
 - Maintenance update.
