@@ -4,9 +4,7 @@ All notable changes to this project are documented in this file.
 
 ## 1.1.1
 
-- Release RealmRegionTag v1.1.0
-- Release RealmRegionTag v1.0.9
-- Updated addon version metadata.
+- Maintenance update.
 
 ## 1.0.5
 
