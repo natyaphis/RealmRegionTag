@@ -2,7 +2,20 @@ local addonName = ...
 
 local addon = CreateFrame("Frame")
 local DEFAULT_US_MODE = "split"
-local CURRENT_VERSION = GetAddOnMetadata(addonName, "Version") or "0.0.0"
+
+local function GetAddonMetadataValue(name, field)
+    if type(C_AddOns) == "table" and type(C_AddOns.GetAddOnMetadata) == "function" then
+        return C_AddOns.GetAddOnMetadata(name, field)
+    end
+
+    if type(GetAddOnMetadata) == "function" then
+        return GetAddOnMetadata(name, field)
+    end
+
+    return nil
+end
+
+local CURRENT_VERSION = GetAddonMetadataValue(addonName, "Version") or "0.0.0"
 local LOCALE = GetLocale()
 local IS_CHINESE_LOCALE = LOCALE == "zhCN" or LOCALE == "zhTW"
 local VERSION_MESSAGES = {
