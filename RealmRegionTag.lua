@@ -1,6 +1,7 @@
 local addonName = ...
 
 local addon = CreateFrame("Frame")
+local DEFAULT_US_MODE = "split"
 
 local REGION_COLORS = {
     US = "4DA3FF",
@@ -99,6 +100,27 @@ local function GetRegionForRealm(realmName)
     return normalizedRealm and REALM_TO_REGION[normalizedRealm] or "US"
 end
 
+local function IsSplitUSRegion(region)
+    return region == "USE" or region == "USC" or region == "USM" or region == "USP"
+end
+
+local function GetUSDisplayMode()
+    local db = _G.RealmRegionTagDB
+    local mode = db and db.usMode
+    if mode == "unified" then
+        return "unified"
+    end
+    return DEFAULT_US_MODE
+end
+
+local function GetDisplayRegion(region)
+    if GetUSDisplayMode() == "unified" and IsSplitUSRegion(region) then
+        return "US"
+    end
+
+    return region
+end
+
 local function GetEntryInfo(resultID)
     if not resultID then
         return nil
@@ -154,7 +176,7 @@ local function UpdateEntry(entry)
         return
     end
 
-    entry.Name:SetText(BuildColoredTag(info.region) .. " " .. StripExistingTag(nameText))
+    entry.Name:SetText(BuildColoredTag(GetDisplayRegion(info.region)) .. " " .. StripExistingTag(nameText))
 end
 
 local function HookSearchEntryUpdate()
@@ -170,8 +192,75 @@ local function HookSearchEntryUpdate()
     return true
 end
 
+local function RefreshSearchResults()
+    if type(LFGListSearchPanel_UpdateResults) == "function" and LFGListFrame and LFGListFrame.SearchPanel then
+        LFGListSearchPanel_UpdateResults(LFGListFrame.SearchPanel)
+    end
+end
+
+local function PrintUsage()
+    print("|cff4DA3FFRealmRegionTag|r usage: /rrt us")
+end
+
+local function PrintUSDisplayMode()
+    local mode = GetUSDisplayMode()
+    local label = mode == "unified" and "US" or "USE/USC/USM/USP"
+    print(string.format("|cff4DA3FFRealmRegionTag|r current US display mode: %s", label))
+end
+
+local function SetUSDisplayMode(mode)
+    RealmRegionTagDB = RealmRegionTagDB or {}
+    RealmRegionTagDB.usMode = mode
+
+    PrintUSDisplayMode()
+    RefreshSearchResults()
+end
+
+local function ToggleUSDisplayMode()
+    if GetUSDisplayMode() == "unified" then
+        SetUSDisplayMode("split")
+    else
+        SetUSDisplayMode("unified")
+    end
+end
+
+local function HandleSlashCommand(message)
+    local command, option = strsplit(" ", strtrim(message or ""), 2)
+    command = command and command:lower() or ""
+    option = option and option:lower() or ""
+
+    if command == "" then
+        PrintUSDisplayMode()
+        PrintUsage()
+        return
+    end
+
+    if command == "us" and option == "" then
+        ToggleUSDisplayMode()
+        return
+    end
+
+    PrintUsage()
+end
+
+local function InitializeSavedVariables()
+    RealmRegionTagDB = RealmRegionTagDB or {}
+    if RealmRegionTagDB.usMode ~= "unified" and RealmRegionTagDB.usMode ~= "split" then
+        RealmRegionTagDB.usMode = DEFAULT_US_MODE
+    end
+end
+
+local function RegisterSlashCommands()
+    SLASH_REALMREGIONTAG1 = "/realmregiontag"
+    SLASH_REALMREGIONTAG2 = "/rrt"
+    SlashCmdList.REALMREGIONTAG = HandleSlashCommand
+end
+
 addon:SetScript("OnEvent", function(_, event, loadedAddon)
     if event == "PLAYER_LOGIN" then
+        InitializeSavedVariables()
+        RegisterSlashCommands()
+
         if HookSearchEntryUpdate() then
             return
         end
