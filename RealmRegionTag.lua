@@ -1,29 +1,6 @@
 local addonName = ...
 
 local addon = CreateFrame("Frame")
-local DEFAULT_US_MODE = "split"
-
-local function GetAddonMetadataValue(name, field)
-    if type(C_AddOns) == "table" and type(C_AddOns.GetAddOnMetadata) == "function" then
-        return C_AddOns.GetAddOnMetadata(name, field)
-    end
-
-    if type(GetAddOnMetadata) == "function" then
-        return GetAddOnMetadata(name, field)
-    end
-
-    return nil
-end
-
-local CURRENT_VERSION = GetAddonMetadataValue(addonName, "Version") or "0.0.0"
-local LOCALE = GetLocale()
-local IS_CHINESE_LOCALE = LOCALE == "zhCN" or LOCALE == "zhTW"
-local VERSION_MESSAGES = {
-    ["1.0.8"] = {
-        zh = "1.0.8 新功能: 使用 \"/rrt us\" 可切换美服标签为统一 US 或分开显示 USE/USC/USM/USP。",
-        en = "New in 1.0.8: use \"/rrt us\" to toggle US realm tags between US and USE/USC/USM/USP.",
-    },
-}
 
 local REGION_COLORS = {
     US = "4DA3FF",
@@ -122,47 +99,6 @@ local function GetRegionForRealm(realmName)
     return normalizedRealm and REALM_TO_REGION[normalizedRealm] or "US"
 end
 
-local function IsSplitUSRegion(region)
-    return region == "USE" or region == "USC" or region == "USM" or region == "USP"
-end
-
-local function GetUSDisplayMode()
-    local db = _G.RealmRegionTagDB
-    local mode = db and db.usMode
-    if mode == "unified" then
-        return "unified"
-    end
-    return DEFAULT_US_MODE
-end
-
-local function ParseVersion(version)
-    local major, minor, patch = tostring(version or ""):match("^(%d+)%.(%d+)%.(%d+)$")
-    return tonumber(major) or 0, tonumber(minor) or 0, tonumber(patch) or 0
-end
-
-local function IsVersionNewer(newVersion, oldVersion)
-    local newMajor, newMinor, newPatch = ParseVersion(newVersion)
-    local oldMajor, oldMinor, oldPatch = ParseVersion(oldVersion)
-
-    if newMajor ~= oldMajor then
-        return newMajor > oldMajor
-    end
-
-    if newMinor ~= oldMinor then
-        return newMinor > oldMinor
-    end
-
-    return newPatch > oldPatch
-end
-
-local function GetDisplayRegion(region)
-    if GetUSDisplayMode() == "unified" and IsSplitUSRegion(region) then
-        return "US"
-    end
-
-    return region
-end
-
 local function GetEntryInfo(resultID)
     if not resultID then
         return nil
@@ -218,7 +154,7 @@ local function UpdateEntry(entry)
         return
     end
 
-    entry.Name:SetText(BuildColoredTag(GetDisplayRegion(info.region)) .. " " .. StripExistingTag(nameText))
+    entry.Name:SetText(BuildColoredTag(info.region) .. " " .. StripExistingTag(nameText))
 end
 
 local function HookSearchEntryUpdate()
@@ -234,101 +170,8 @@ local function HookSearchEntryUpdate()
     return true
 end
 
-local function RefreshSearchResults()
-    if type(LFGListSearchPanel_UpdateResults) == "function" and LFGListFrame and LFGListFrame.SearchPanel then
-        LFGListSearchPanel_UpdateResults(LFGListFrame.SearchPanel)
-    end
-end
-
-local function PrintUsage()
-    print("|cff4DA3FFRealmRegionTag|r 用法: \"/rrt us\"")
-end
-
-local function PrintUSDisplayMode()
-    local mode = GetUSDisplayMode()
-    local label = mode == "unified" and "统一 US" or "分开 USE/USC/USM/USP"
-    print(string.format("|cff4DA3FFRealmRegionTag|r 当前美服显示模式: %s", label))
-end
-
-local function SetUSDisplayMode(mode)
-    RealmRegionTagDB = RealmRegionTagDB or {}
-    RealmRegionTagDB.usMode = mode
-
-    PrintUSDisplayMode()
-    RefreshSearchResults()
-end
-
-local function ToggleUSDisplayMode()
-    if GetUSDisplayMode() == "unified" then
-        SetUSDisplayMode("split")
-    else
-        SetUSDisplayMode("unified")
-    end
-end
-
-local function HandleSlashCommand(message)
-    local command, option = strsplit(" ", strtrim(message or ""), 2)
-    command = command and command:lower() or ""
-    option = option and option:lower() or ""
-
-    if command == "" then
-        PrintUSDisplayMode()
-        PrintUsage()
-        return
-    end
-
-    if command == "us" and option == "" then
-        ToggleUSDisplayMode()
-        return
-    end
-
-    PrintUsage()
-end
-
-local function InitializeSavedVariables()
-    RealmRegionTagDB = RealmRegionTagDB or {}
-    if RealmRegionTagDB.usMode ~= "unified" and RealmRegionTagDB.usMode ~= "split" then
-        RealmRegionTagDB.usMode = DEFAULT_US_MODE
-    end
-end
-
-local function RegisterSlashCommands()
-    SLASH_REALMREGIONTAG1 = "/realmregiontag"
-    SLASH_REALMREGIONTAG2 = "/rrt"
-    SlashCmdList.REALMREGIONTAG = HandleSlashCommand
-end
-
-local function ShowVersionUpdateMessage()
-    RealmRegionTagDB = RealmRegionTagDB or {}
-
-    local lastSeenVersion = RealmRegionTagDB.lastSeenVersion
-    if not lastSeenVersion then
-        RealmRegionTagDB.lastSeenVersion = CURRENT_VERSION
-        return
-    end
-
-    if IsVersionNewer(CURRENT_VERSION, lastSeenVersion) then
-        local versionMessage = VERSION_MESSAGES[CURRENT_VERSION]
-        local message
-        if type(versionMessage) == "table" then
-            message = IS_CHINESE_LOCALE and versionMessage.zh or versionMessage.en
-        else
-            message = versionMessage
-        end
-        if message then
-            print("|cff4DA3FFRealmRegionTag|r " .. message)
-        end
-    end
-
-    RealmRegionTagDB.lastSeenVersion = CURRENT_VERSION
-end
-
 addon:SetScript("OnEvent", function(_, event, loadedAddon)
     if event == "PLAYER_LOGIN" then
-        InitializeSavedVariables()
-        RegisterSlashCommands()
-        ShowVersionUpdateMessage()
-
         if HookSearchEntryUpdate() then
             return
         end

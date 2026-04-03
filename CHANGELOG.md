@@ -2,45 +2,17 @@
 
 All notable changes to this project are documented in this file.
 
-## 1.1.0
+## 1.1.1
 
-- Maintenance update.
-
-## 1.0.9
-
-- Maintenance update.
-
-## 1.0.8
-
-- Release RealmRegionTag 1.0.5
-- Release RealmRegionTag 1.0.2
-- Release RealmRegionTag v1.0.1
-- Rename addon to RealmRegionTag
-- Add license section to README
-- Add MIT license
-- Move images into asset folder and exclude assets from packaging
-- Add screenshot to README
-- Exclude screenshot from release package
-- Add addon screenshot
-- Add gitignore and release packaging workflow
-- Initial commit
+- Release RealmRegionTag v1.1.0
+- Release RealmRegionTag v1.0.9
 - Updated addon version metadata.
-
-## Unreleased
-
-- Added `/rrt us` to toggle how US realm tags are displayed.
-- Saved the selected US display mode across reloads and restarts.
-- Updated addon version metadata.
-
-## 1.0.7 - 2026-04-03
-
-- Added a simple slash command toggle for US realm display mode.
-- US realms can now be shown either as a single `US` tag or split as `USE`, `USC`, `USM`, and `USP`.
-- Persisted the selected mode with addon saved variables.
 
 ## 1.0.5
 
 - Released 1.0.5
+
+## Unreleased
 
 ## 1.0.5 - 2026-03-16
 
