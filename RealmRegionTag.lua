@@ -25,6 +25,9 @@ local REGION_LABELS = {
 }
 
 local REALM_TO_REGION = {}
+local DEFAULT_SETTINGS = {
+    mergeUS = false,
+}
 
 local FIXED_REGION_REALMS = {
     -- Oceanic
@@ -61,16 +64,26 @@ local US_REALMS_BY_TIMEZONE = {
     USP = "aeriepeak,akama,andorhal,antonidas,arathor,baelgun,blackrock,boreantundra,bronzebeard,cenarioncircle,cenarius,coilfang,dalvengyr,darkiron,darrowmere,deathwing,demonsoul,doomhammer,draenor,dragonblight,dragonmaw,draka,drakthul,drenden,echoisles,executus,farstriders,feathermoon,fenris,frostwolf,gnomeregan,hyjal,kalecgos,kiljaeden,kilrogg,lightbringer,moknathal,moonrunner,mugthol,proudmoore,scarletcrusade,scilla,shadowsong,shandris,shatteredhalls,shatteredhand,silverhand,silvermoon,sistersofelune,skywall,suramar,thoriumbrotherhood,tichondrius,uldum,ursin,vashj,windrunner,winterhoof,wyrmrestaccord,zuluhed",
 }
 
+local function IsUSMerged()
+    return RealmRegionTagDB and RealmRegionTagDB.mergeUS == true
+end
+
 local function InitializeRealmMappings()
+    wipe(REALM_TO_REGION)
+
     for realmName, region in pairs(FIXED_REGION_REALMS) do
         REALM_TO_REGION[realmName] = region
     end
 
     for region, realmList in pairs(US_REALMS_BY_TIMEZONE) do
         for realmName in realmList:gmatch("[^,]+") do
-            REALM_TO_REGION[realmName] = region
+            REALM_TO_REGION[realmName] = IsUSMerged() and "US" or region
         end
     end
+end
+
+local function Print(message)
+    DEFAULT_CHAT_FRAME:AddMessage(string.format("|cff5AA9FFRealmRegionTag:|r %s", message))
 end
 
 local function NormalizeRealmName(realmName)
@@ -157,6 +170,22 @@ local function UpdateEntry(entry)
     entry.Name:SetText(BuildColoredTag(info.region) .. " " .. StripExistingTag(nameText))
 end
 
+local function RefreshSearchResults()
+    if not LFGListFrame or not LFGListFrame.SearchPanel then
+        return
+    end
+
+    local searchPanel = LFGListFrame.SearchPanel
+
+    if searchPanel.ScrollBox and searchPanel.ScrollBox.ForEachFrame then
+        searchPanel.ScrollBox:ForEachFrame(UpdateEntry)
+    end
+
+    if searchPanel.results and type(searchPanel.results.Update) == "function" then
+        searchPanel.results:Update()
+    end
+end
+
 local function HookSearchEntryUpdate()
     if type(LFGListSearchEntry_Update) ~= "function" then
         return false
@@ -170,8 +199,52 @@ local function HookSearchEntryUpdate()
     return true
 end
 
+local function InitializeSettings()
+    RealmRegionTagDB = RealmRegionTagDB or {}
+
+    for key, value in pairs(DEFAULT_SETTINGS) do
+        if RealmRegionTagDB[key] == nil then
+            RealmRegionTagDB[key] = value
+        end
+    end
+end
+
+local function ToggleUSMode()
+    RealmRegionTagDB.mergeUS = not RealmRegionTagDB.mergeUS
+    InitializeRealmMappings()
+    RefreshSearchResults()
+
+    if RealmRegionTagDB.mergeUS then
+        Print("US realms are now merged and shown as US.")
+    else
+        Print("US realms are now split by timezone as USE, USC, USM, and USP.")
+    end
+end
+
+local function RegisterSlashCommands()
+    SLASH_REALMREGIONTAG1 = "/rrt"
+    SlashCmdList.REALMREGIONTAG = function(message)
+        local command = type(message) == "string" and message:match("^%s*(.-)%s*$"):lower() or ""
+
+        if command == "us" then
+            ToggleUSMode()
+            return
+        end
+
+        if IsUSMerged() then
+            Print("Current US mode: merged. Use /rrt us to switch back to timezone tags.")
+        else
+            Print("Current US mode: timezone split. Use /rrt us to merge them into US.")
+        end
+    end
+end
+
 addon:SetScript("OnEvent", function(_, event, loadedAddon)
     if event == "PLAYER_LOGIN" then
+        InitializeSettings()
+        InitializeRealmMappings()
+        RegisterSlashCommands()
+
         if HookSearchEntryUpdate() then
             return
         end
@@ -183,5 +256,3 @@ addon:SetScript("OnEvent", function(_, event, loadedAddon)
 end)
 
 addon:RegisterEvent("PLAYER_LOGIN")
-
-InitializeRealmMappings()

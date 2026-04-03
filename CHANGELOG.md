@@ -2,6 +2,10 @@
 
 All notable changes to this project are documented in this file.
 
+## 1.1.4
+
+- Updated addon version metadata.
+
 ## 1.1.3
 
 - Maintenance update.
@@ -15,6 +19,8 @@ All notable changes to this project are documented in this file.
 - Released 1.0.5
 
 ## Unreleased
+
+- Added a persistent `/rrt us` toggle to switch US realm tags between merged `US` and split `USE`/`USC`/`USM`/`USP` display.
 
 ## 1.0.5 - 2026-03-16
 

@@ -8,6 +8,7 @@ World of Warcraft Retail addon for the US region that adds a realm region tag to
 - Keeps `OC`, `BR`, and `LA` tags for Oceanic, Brazil, and Latin America realms.
 - Colors each tag for easier scanning.
 - Defaults unknown realms to `US`.
+- Toggle `/rrt us` to switch between merged `US` and split `USE`/`USC`/`USM`/`USP` display.
 
 ## Screenshot
 
