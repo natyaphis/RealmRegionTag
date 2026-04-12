@@ -2,6 +2,12 @@
 
 All notable changes to this project are documented in this file.
 
+## 1.1.6
+
+- Added realm region tags to group applicants when you are the leader, using the applicant leader for party applications.
+- Made the `/rrt us` toggle refresh applicant tags as well as Premade Groups search results.
+- Fixed applicant handling for Blizzard's newer applicant data tables so the toggle and applicant list no longer error.
+
 ## 1.1.5
 
 - Updated addon version metadata.

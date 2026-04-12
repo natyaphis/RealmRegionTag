@@ -136,6 +136,33 @@ local function GetEntryInfo(resultID)
     }
 end
 
+local function GetApplicantLeaderInfo(applicantID)
+    if not applicantID then
+        return nil
+    end
+
+    local applicantInfo = C_LFGList.GetApplicantInfo(applicantID)
+    if not applicantInfo or not applicantInfo.numMembers or applicantInfo.numMembers < 1 then
+        return nil
+    end
+
+    local memberName = C_LFGList.GetApplicantMemberInfo(applicantID, 1)
+    if type(memberName) ~= "string" or memberName == "" then
+        return nil
+    end
+
+    local realmName = ExtractRealmFromLeaderName(memberName)
+    if not realmName or realmName == "" then
+        realmName = GetRealmName()
+    end
+
+    return {
+        leaderName = memberName,
+        realmName = realmName,
+        region = GetRegionForRealm(realmName),
+    }
+end
+
 local function BuildColoredTag(region)
     local color = REGION_COLORS[region] or "FFFFFF"
     local label = REGION_LABELS[region] or region
@@ -170,6 +197,165 @@ local function UpdateEntry(entry)
     entry.Name:SetText(BuildColoredTag(info.region) .. " " .. StripExistingTag(nameText))
 end
 
+local function UpdateTextWithRegionTag(fontString, info)
+    if not fontString or not fontString.GetText or not fontString.SetText then
+        return false
+    end
+
+    local nameText = fontString:GetText()
+    if not nameText or nameText == "" then
+        return false
+    end
+
+    fontString:SetText(BuildColoredTag(info.region) .. " " .. StripExistingTag(nameText))
+    return true
+end
+
+local function ResolveApplicantID(...)
+    for index = 1, select("#", ...) do
+        local value = select(index, ...)
+
+        if type(value) == "number" then
+            return value
+        end
+
+        if type(value) == "table" then
+            if type(value.id) == "number" then
+                return value.id
+            end
+
+            if type(value.applicantID) == "number" then
+                return value.applicantID
+            end
+
+            if type(value.ApplicantID) == "number" then
+                return value.ApplicantID
+            end
+
+            if value.elementData then
+                local applicantID = ResolveApplicantID(value.elementData)
+                if applicantID then
+                    return applicantID
+                end
+            end
+
+            if value.data then
+                local applicantID = ResolveApplicantID(value.data)
+                if applicantID then
+                    return applicantID
+                end
+            end
+        end
+    end
+end
+
+local function ResolveApplicantMemberIndex(...)
+    for index = 1, select("#", ...) do
+        local value = select(index, ...)
+
+        if type(value) == "table" then
+            if type(value.index) == "number" then
+                return value.index
+            end
+
+            if type(value.memberIdx) == "number" then
+                return value.memberIdx
+            end
+
+            if type(value.memberIndex) == "number" then
+                return value.memberIndex
+            end
+
+            if type(value.MemberIdx) == "number" then
+                return value.MemberIdx
+            end
+
+            if value.elementData then
+                local memberIndex = ResolveApplicantMemberIndex(value.elementData)
+                if memberIndex then
+                    return memberIndex
+                end
+            end
+
+            if value.data then
+                local memberIndex = ResolveApplicantMemberIndex(value.data)
+                if memberIndex then
+                    return memberIndex
+                end
+            end
+        end
+    end
+end
+
+local function GetApplicantIDFromButton(button)
+    if not button then
+        return nil
+    end
+
+    return ResolveApplicantID(button)
+end
+
+local function GetApplicantMemberIndexFromButton(button)
+    if not button then
+        return nil
+    end
+
+    return ResolveApplicantMemberIndex(button)
+end
+
+local function UpdateApplicantNameWidget(widget, info)
+    if not widget then
+        return false
+    end
+
+    if UpdateTextWithRegionTag(widget.Name, info) then
+        return true
+    end
+
+    if UpdateTextWithRegionTag(widget.MemberName, info) then
+        return true
+    end
+
+    if UpdateTextWithRegionTag(widget.NameColumnString, info) then
+        return true
+    end
+
+    if UpdateTextWithRegionTag(widget.Text, info) then
+        return true
+    end
+
+    return UpdateTextWithRegionTag(widget, info)
+end
+
+local function UpdateApplicantEntry(button, elementData)
+    local applicantID = ResolveApplicantID(elementData, button)
+    if not button or not applicantID then
+        return
+    end
+
+    local info = GetApplicantLeaderInfo(applicantID)
+    if not info or not info.region then
+        return
+    end
+
+    UpdateApplicantNameWidget(button, info)
+end
+
+local function UpdateApplicantMemberEntry(button, applicantID, memberIndex)
+    applicantID = ResolveApplicantID(applicantID, button)
+    memberIndex = ResolveApplicantMemberIndex(memberIndex, applicantID, button)
+    if not button or not applicantID or memberIndex ~= 1 then
+        return
+    end
+
+    local info = GetApplicantLeaderInfo(applicantID)
+    if not info or not info.region then
+        return
+    end
+
+    UpdateApplicantNameWidget(button, info)
+end
+
 local function RefreshSearchResults()
     if not LFGListFrame or not LFGListFrame.SearchPanel then
         return
@@ -186,6 +372,18 @@ local function RefreshSearchResults()
     end
 end
 
+local function RefreshApplicantResults()
+    if not LFGListFrame or not LFGListFrame.ApplicationViewer then
+        return
+    end
+
+    local applicationViewer = LFGListFrame.ApplicationViewer
+
+    if applicationViewer.ScrollBox and applicationViewer.ScrollBox.ForEachFrame then
+        applicationViewer.ScrollBox:ForEachFrame(UpdateApplicantEntry)
+    end
+end
+
 local function HookSearchEntryUpdate()
     if type(LFGListSearchEntry_Update) ~= "function" then
         return false
@@ -194,6 +392,32 @@ local function HookSearchEntryUpdate()
     if not addon.isHooked then
         hooksecurefunc("LFGListSearchEntry_Update", UpdateEntry)
         addon.isHooked = true
+    end
+
+    return true
+end
+
+local function HookApplicantEntryUpdate()
+    if type(LFGListApplicationViewer_UpdateApplicant) ~= "function" then
+        return false
+    end
+
+    if not addon.isApplicantHooked then
+        hooksecurefunc("LFGListApplicationViewer_UpdateApplicant", UpdateApplicantEntry)
+        addon.isApplicantHooked = true
+    end
+
+    return true
+end
+
+local function HookApplicantMemberEntryUpdate()
+    if type(LFGListApplicationViewer_UpdateApplicantMember) ~= "function" then
+        return false
+    end
+
+    if not addon.isApplicantMemberHooked then
+        hooksecurefunc("LFGListApplicationViewer_UpdateApplicantMember", UpdateApplicantMemberEntry)
+        addon.isApplicantMemberHooked = true
     end
 
     return true
@@ -213,6 +437,7 @@ local function ToggleUSMode()
     RealmRegionTagDB.mergeUS = not RealmRegionTagDB.mergeUS
     InitializeRealmMappings()
     RefreshSearchResults()
+    RefreshApplicantResults()
 
     if RealmRegionTagDB.mergeUS then
         Print("US realms are now merged and shown as US.")
@@ -245,13 +470,19 @@ addon:SetScript("OnEvent", function(_, event, loadedAddon)
         InitializeRealmMappings()
         RegisterSlashCommands()
 
-        if HookSearchEntryUpdate() then
+        local hookedSearch = HookSearchEntryUpdate()
+        local hookedApplicant = HookApplicantEntryUpdate()
+        local hookedApplicantMember = HookApplicantMemberEntryUpdate()
+
+        if hookedSearch and hookedApplicant and hookedApplicantMember then
             return
         end
 
         addon:RegisterEvent("ADDON_LOADED")
     elseif event == "ADDON_LOADED" and loadedAddon == "Blizzard_GroupFinder" then
         HookSearchEntryUpdate()
+        HookApplicantEntryUpdate()
+        HookApplicantMemberEntryUpdate()
     end
 end)
 
