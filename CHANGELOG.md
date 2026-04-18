@@ -2,6 +2,12 @@
 
 All notable changes to this project are documented in this file.
 
+## 1.1.7
+
+- Added a persistent `/rrt us` toggle to switch US realm tags between merged `US` and split `USE`/`USC`/`USM`/`USP` display.
+- Added addon list metadata for the logo icon, interface category, and the updated `natyaphis` author name.
+- Excluded the `Asset` screenshot folder from release packaging.
+
 ## 1.1.6
 
 - Added realm region tags to group applicants when you are the leader, using the applicant leader for party applications.
@@ -29,10 +35,6 @@ All notable changes to this project are documented in this file.
 - Released 1.0.5
 
 ## Unreleased
-
-- Added a persistent `/rrt us` toggle to switch US realm tags between merged `US` and split `USE`/`USC`/`USM`/`USP` display.
-- Added addon list metadata for the logo icon, interface category, and the updated `natyaphis` author name.
-- Excluded the `Asset` screenshot folder from release packaging.
 
 ## 1.0.5 - 2026-03-16
 
