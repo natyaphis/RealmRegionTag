@@ -2,6 +2,10 @@
 
 All notable changes to this project are documented in this file.
 
+## 1.1.8
+
+- Maintenance update.
+
 ## 1.1.7
 
 - Added a persistent `/rrt us` toggle to switch US realm tags between merged `US` and split `USE`/`USC`/`USM`/`USP` display.
