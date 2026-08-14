@@ -1,8 +1,8 @@
-## Interface: 120001, 120005, 120007
+## Interface: 120100
 ## Title: RealmRegionTag
 ## Notes: Show realm region tags in the Premade Groups list with RealmRegionTag
 ## Author: natyaphis
-## Version: 1.1.9
+## Version: 1.1.10
 ## IconTexture: Interface\AddOns\RealmRegionTag\Media\logo.png
 ## Category-enUS: Interface
 ## Category-zhCN: 界面增强
