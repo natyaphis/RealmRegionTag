@@ -2,6 +2,11 @@
 
 All notable changes to this project are documented in this file.
 
+## 1.2.1
+
+- Added explicit Retail 12.1.5 and 12.1.7 interface compatibility metadata.
+- Added an updated feature screenshot for the project documentation assets.
+
 ## 1.2.0
 
 - Added persistent region checkboxes above Premade Groups search results for filtering `OC`, `US`, `LA`, and `BR` listings.

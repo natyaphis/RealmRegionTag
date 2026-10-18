@@ -2,6 +2,8 @@
 
 World of Warcraft Retail addon for the US region that adds a realm region tag to entries in the Premade Groups list.
 
+Supports Retail 12.1.5 and 12.1.7.
+
 ## Features
 
 - Splits US realms into `ET`, `CT`, `MT`, and `PT` based on realm timezone data.
