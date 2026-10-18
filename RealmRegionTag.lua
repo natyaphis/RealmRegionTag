@@ -28,6 +28,13 @@ local REALM_TO_REGION = {}
 local DEFAULT_SETTINGS = {
     mergeUS = false,
 }
+local DEFAULT_REGION_FILTERS = {
+    OC = true,
+    US = true,
+    LA = true,
+    BR = true,
+}
+local REGION_FILTER_ORDER = { "OC", "US", "LA", "BR" }
 
 local FIXED_REGION_REALMS = {
     -- Oceanic
@@ -110,6 +117,14 @@ end
 local function GetRegionForRealm(realmName)
     local normalizedRealm = NormalizeRealmName(realmName)
     return normalizedRealm and REALM_TO_REGION[normalizedRealm] or "US"
+end
+
+local function GetFilterRegion(region)
+    if region == "USE" or region == "USC" or region == "USM" or region == "USP" then
+        return "US"
+    end
+
+    return region
 end
 
 local function GetEntryInfo(resultID)
@@ -356,6 +371,85 @@ local function UpdateApplicantMemberEntry(button, applicantID, memberIndex)
     UpdateApplicantNameWidget(button, info)
 end
 
+local function IsRegionFilterActive()
+    if not RealmRegionTagDB or type(RealmRegionTagDB.regionFilters) ~= "table" then
+        return false
+    end
+
+    for region in pairs(DEFAULT_REGION_FILTERS) do
+        if RealmRegionTagDB.regionFilters[region] ~= true then
+            return true
+        end
+    end
+
+    return false
+end
+
+local function ShouldShowSearchResult(resultID)
+    local info = GetEntryInfo(resultID)
+    if not info then
+        -- Keep results whose leader data has not arrived yet. A later result
+        -- update will run the filter again once the information is available.
+        return true
+    end
+
+    local filterRegion = GetFilterRegion(info.region)
+    return RealmRegionTagDB.regionFilters[filterRegion] == true
+end
+
+local function FilterResultList(results)
+    if type(results) ~= "table" then
+        return
+    end
+
+    for index = #results, 1, -1 do
+        if not ShouldShowSearchResult(results[index]) then
+            table.remove(results, index)
+        end
+    end
+end
+
+local function FilterSearchPanelResults(searchPanel)
+    if not searchPanel or not IsRegionFilterActive() then
+        return
+    end
+
+    FilterResultList(searchPanel.results)
+    FilterResultList(searchPanel.applications)
+
+    local visibleResults = {}
+    local visibleCount = 0
+
+    for _, resultID in ipairs(searchPanel.results or {}) do
+        if not visibleResults[resultID] then
+            visibleResults[resultID] = true
+            visibleCount = visibleCount + 1
+        end
+    end
+
+    for _, resultID in ipairs(searchPanel.applications or {}) do
+        if not visibleResults[resultID] then
+            visibleResults[resultID] = true
+            visibleCount = visibleCount + 1
+        end
+    end
+
+    searchPanel.totalResults = visibleCount
+
+    if searchPanel.selectedResult and not visibleResults[searchPanel.selectedResult] then
+        searchPanel.selectedResult = nil
+    end
+end
+
+local function RefreshFilteredSearchResults()
+    local searchPanel = LFGListFrame and LFGListFrame.SearchPanel
+    if not searchPanel or type(LFGListSearchPanel_UpdateResultList) ~= "function" then
+        return
+    end
+
+    LFGListSearchPanel_UpdateResultList(searchPanel)
+end
+
 local function RefreshSearchResults()
     if not LFGListFrame or not LFGListFrame.SearchPanel then
         return
@@ -363,12 +457,13 @@ local function RefreshSearchResults()
 
     local searchPanel = LFGListFrame.SearchPanel
 
-    if searchPanel.ScrollBox and searchPanel.ScrollBox.ForEachFrame then
-        searchPanel.ScrollBox:ForEachFrame(UpdateEntry)
+    if searchPanel.results and type(LFGListSearchPanel_UpdateResultList) == "function" then
+        LFGListSearchPanel_UpdateResultList(searchPanel)
+        return
     end
 
-    if searchPanel.results and type(searchPanel.results.Update) == "function" then
-        searchPanel.results:Update()
+    if searchPanel.ScrollBox and searchPanel.ScrollBox.ForEachFrame then
+        searchPanel.ScrollBox:ForEachFrame(UpdateEntry)
     end
 end
 
@@ -394,6 +489,65 @@ local function HookSearchEntryUpdate()
         addon.isHooked = true
     end
 
+    return true
+end
+
+local function HookSearchResultFilter()
+    if type(LFGListUtil_SortSearchResults) ~= "function" then
+        return false
+    end
+
+    if not addon.isSearchFilterHooked then
+        hooksecurefunc("LFGListUtil_SortSearchResults", FilterSearchPanelResults)
+        addon.isSearchFilterHooked = true
+        addon:RegisterEvent("LFG_LIST_SEARCH_RESULT_UPDATED")
+    end
+
+    return true
+end
+
+local function CreateRegionFilterControls()
+    if addon.regionFilterFrame or not LFGListFrame or not LFGListFrame.SearchPanel then
+        return addon.regionFilterFrame ~= nil
+    end
+
+    local searchPanel = LFGListFrame.SearchPanel
+    local filterFrame = CreateFrame("Frame", nil, searchPanel)
+    filterFrame:SetSize(260, 22)
+    filterFrame:SetPoint("TOPLEFT", searchPanel, "TOPLEFT", 4, -80)
+
+    local title = filterFrame:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
+    title:SetPoint("LEFT", filterFrame, "LEFT", 0, 0)
+    title:SetText("Region:")
+
+    local previous = title
+    for _, region in ipairs(REGION_FILTER_ORDER) do
+        local filterRegion = region
+        local checkButton = CreateFrame("CheckButton", nil, filterFrame, "UICheckButtonTemplate")
+        checkButton:SetSize(20, 20)
+        checkButton:SetPoint("LEFT", previous, "RIGHT", previous == title and 4 or 25, 0)
+        checkButton:SetChecked(RealmRegionTagDB.regionFilters[filterRegion] == true)
+        checkButton:SetHitRectInsets(0, -23, 0, 0)
+
+        local label = checkButton:CreateFontString(nil, "ARTWORK", "GameFontHighlightSmall")
+        label:SetPoint("LEFT", checkButton, "RIGHT", -2, 0)
+        label:SetText(filterRegion)
+
+        checkButton:SetScript("OnClick", function(button)
+            RealmRegionTagDB.regionFilters[filterRegion] = button:GetChecked() == true
+            RefreshFilteredSearchResults()
+        end)
+
+        previous = checkButton
+    end
+
+    if searchPanel.ResultsInset then
+        searchPanel.ResultsInset:ClearAllPoints()
+        searchPanel.ResultsInset:SetPoint("TOPLEFT", searchPanel, "TOPLEFT", -1, -106)
+        searchPanel.ResultsInset:SetPoint("BOTTOMRIGHT", searchPanel, "BOTTOMRIGHT", -25, 26)
+    end
+
+    addon.regionFilterFrame = filterFrame
     return true
 end
 
@@ -429,6 +583,16 @@ local function InitializeSettings()
     for key, value in pairs(DEFAULT_SETTINGS) do
         if RealmRegionTagDB[key] == nil then
             RealmRegionTagDB[key] = value
+        end
+    end
+
+    if type(RealmRegionTagDB.regionFilters) ~= "table" then
+        RealmRegionTagDB.regionFilters = {}
+    end
+
+    for region, enabled in pairs(DEFAULT_REGION_FILTERS) do
+        if RealmRegionTagDB.regionFilters[region] == nil then
+            RealmRegionTagDB.regionFilters[region] = enabled
         end
     end
 end
@@ -471,18 +635,30 @@ addon:SetScript("OnEvent", function(_, event, loadedAddon)
         RegisterSlashCommands()
 
         local hookedSearch = HookSearchEntryUpdate()
+        local hookedSearchFilter = HookSearchResultFilter()
         local hookedApplicant = HookApplicantEntryUpdate()
         local hookedApplicantMember = HookApplicantMemberEntryUpdate()
+        local createdRegionFilters = CreateRegionFilterControls()
 
-        if hookedSearch and hookedApplicant and hookedApplicantMember then
+        if hookedSearch and hookedSearchFilter and hookedApplicant and hookedApplicantMember and createdRegionFilters then
             return
         end
 
         addon:RegisterEvent("ADDON_LOADED")
     elseif event == "ADDON_LOADED" and loadedAddon == "Blizzard_GroupFinder" then
         HookSearchEntryUpdate()
+        HookSearchResultFilter()
         HookApplicantEntryUpdate()
         HookApplicantMemberEntryUpdate()
+        CreateRegionFilterControls()
+    elseif event == "LFG_LIST_SEARCH_RESULT_UPDATED" and IsRegionFilterActive() then
+        local searchPanel = LFGListFrame and LFGListFrame.SearchPanel
+        if searchPanel and searchPanel.results then
+            FilterSearchPanelResults(searchPanel)
+            if type(LFGListSearchPanel_UpdateResults) == "function" then
+                LFGListSearchPanel_UpdateResults(searchPanel)
+            end
+        end
     end
 end)
 

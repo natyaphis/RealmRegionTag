@@ -2,6 +2,11 @@
 
 All notable changes to this project are documented in this file.
 
+## 1.2.0
+
+- Added persistent region checkboxes above Premade Groups search results for filtering `OC`, `US`, `LA`, and `BR` listings.
+- Grouped `USE`, `USC`, `USM`, and `USP` under the `US` filter while preserving the configured tag display mode.
+
 ## 1.1.10
 
 - Updated addon version metadata.
