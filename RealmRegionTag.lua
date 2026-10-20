@@ -137,6 +137,12 @@ local function GetEntryInfo(resultID)
         return nil
     end
 
+    -- Leader names can be secret while addon restrictions are active. Keep
+    -- the result visible until the name can safely be inspected.
+    if issecretvalue and issecretvalue(resultInfo.leaderName) then
+        return nil
+    end
+
     local realmName = ExtractRealmFromLeaderName(resultInfo.leaderName)
     if not realmName or realmName == "" then
         realmName = GetRealmName()

@@ -2,6 +2,10 @@
 
 All notable changes to this project are documented in this file.
 
+## 1.2.2
+
+- Prevented errors when Group Finder returns a secret leader name under addon restrictions; listings without readable realm data remain visible until they can be checked safely.
+
 ## 1.2.1
 
 - Added explicit Retail 12.1.5 and 12.1.7 interface compatibility metadata.
